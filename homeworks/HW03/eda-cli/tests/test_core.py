@@ -59,3 +59,48 @@ def test_correlation_and_top_categories():
     city_table = top_cats["city"]
     assert "value" in city_table.columns
     assert len(city_table) <= 2
+
+def test_const_col_and_sus_dup():
+    """Тест новых эвристик: константные колонки и дубликаты id."""
+    
+    # DataFrame с константной колонкой и дублирующимися id
+    df = pd.DataFrame({
+        "age": [10, 20, 30, 40],
+        "constant_col": [5, 5, 5, 5],      # все значения одинаковые
+        "user_id": [1, 1, 2, 3],           # дубликат user_id=1
+        "clientId": [100, 200, 300, 400],  # нормальный id (уникальный)
+        "city": ["A", "B", "A", "C"]
+    })
+    
+    summary = summarize_dataset(df)
+    missing_df = missing_table(df)  # пропусков нет
+    
+    flags = compute_quality_flags(summary, missing_df)
+    
+    # Проверяем новые флаги
+    assert flags["has_constant_columns"] is True, "constant_col должна быть константной"
+    assert flags["has_suspicious_id_duplicates"] is True, "user_id имеет дубликаты"
+    
+    expected_score = 1.0
+    expected_score -= 0.0  # нет пропусков (max_missing_share)
+    expected_score -= 0.2  # too_few_rows (5 < 100)
+    expected_score -= 0.0  # (n_cols=5 <= 100, НЕ > 100)
+    expected_score -= 0.5  # has_constant_columns
+    expected_score -= 0.10 # has_suspicious_id_duplicates
+    expected_score = max(0.0, min(1.0, expected_score))  # 0.2
+    
+    assert abs(flags["quality_score"] - expected_score) < 0.01, "Скор должен учитывать новые штрафы"
+    
+    # Дополнительный тест: чистые данные без проблем
+    df_clean = pd.DataFrame({
+        "age": [10, 20, 30, 40],
+        "user_id": [1, 2, 3, 4],     # уникальные id
+        "city": ["A", "B", "C", "D"]
+    })
+    
+    summary_clean = summarize_dataset(df_clean)
+    missing_clean = missing_table(df_clean)
+    flags_clean = compute_quality_flags(summary_clean, missing_clean)
+    
+    assert flags_clean["has_constant_columns"] is False
+    assert flags_clean["has_suspicious_id_duplicates"] is False

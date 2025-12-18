@@ -185,6 +185,25 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> 
     flags["max_missing_share"] = max_missing_share
     flags["too_many_missing"] = max_missing_share > 0.5
 
+
+    has_constant_columns = any(
+        (col.unique == 1) and (col.non_null > 0) for col in summary.columns
+    )
+    flags["has_constant_columns"] = has_constant_columns
+
+
+    id_like_columns = [
+        col for col in summary.columns
+        if "id" in col.name.lower()
+    ]
+    has_suspicious_id_duplicates = False
+    for col in id_like_columns:
+        if col.non_null > 0 and col.unique != col.non_null:
+            has_suspicious_id_duplicates = True
+            break
+    flags["has_suspicious_id_duplicates"] = has_suspicious_id_duplicates
+
+
     # Простейший «скор» качества
     score = 1.0
     score -= max_missing_share  # чем больше пропусков, тем хуже
@@ -192,6 +211,10 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> 
         score -= 0.2
     if summary.n_cols > 100:
         score -= 0.1
+    if has_constant_columns:
+        score -= 0.5
+    if has_suspicious_id_duplicates:
+        score -= 0.10
 
     score = max(0.0, min(1.0, score))
     flags["quality_score"] = score
