@@ -242,3 +242,76 @@ async def quality_from_csv(file: UploadFile = File(...)) -> QualityResponse:
         flags=flags_bool,
         dataset_shape={"n_rows": n_rows, "n_cols": n_cols},
     )
+
+class QualityFlagsResponse(BaseModel):
+    flags: dict[str, bool] = Field(
+        ..., description="Полный набор булевых флагов качества датасета."
+    )
+
+
+@app.post(
+    "/quality-flags-from-csv",
+    response_model=QualityFlagsResponse,
+    tags=["quality"],
+    summary="Получить флаги качества из CSV",
+)
+async def quality_flags_from_csv(file: UploadFile = File(...)) -> QualityFlagsResponse:
+    """
+    Принимает CSV-файл и возвращает полный набор флагов качества.
+    """
+    start = perf_counter()
+
+    # проверки content-type такие же, как в /quality-from-csv
+    if file.content_type not in (
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/octet-stream",
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Ожидается CSV-файл (content-type text/csv).",
+        )
+
+    try:
+        df = pd.read_csv(file.file)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Не удалось прочитать CSV: {exc}",
+        ) from exc
+
+    if df.empty:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV-файл не содержит строк данных (пустой DataFrame).",
+        )
+
+    # EDA и вычисление флагов
+    summary = summarize_dataset(df)
+    missing_df = missing_table(df)
+    flags_all = compute_quality_flags(summary, missing_df)
+
+    # Оставляем только булевые флаги
+    flags_bool: dict[str, bool] = {
+        key: bool(value)
+        for key, value in flags_all.items()
+        if isinstance(value, bool)
+    }
+
+    # на всякий случай гарантируем, что нужные ключи присутствуют
+    for key in (
+        "too_few_rows",
+        "too_many_missing",
+        "has_constant_columns",
+        "has_suspicious_id_duplicates",
+    ):
+        flags_bool.setdefault(key, False)
+
+    latency_ms = (perf_counter() - start) * 1000.0
+
+    print(
+        f"quality-flags-from-csv filename={file.filename!r} "
+        f"nrows={len(df)} ncols={df.shape[1]} latency_ms={latency_ms:.1f} ms"
+    )
+
+    return QualityFlagsResponse(flags=flags_bool)
