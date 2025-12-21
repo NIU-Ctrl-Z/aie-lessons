@@ -247,6 +247,47 @@ curl -X POST "http://127.0.0.1:8000/quality-from-csv" \
 
 ---
 
+### 5. `POST /quality-flags-from-csv`
+
+Эндпоинт принимает CSV‑файл, запускает расширенный EDA из HW03 (функции `summarize_dataset`, `missing_table`, `compute_quality_flags`) и возвращает **только булевы флаги качества** без сводных числовых показателей.
+
+**Что делает:**
+
+- Загружает CSV в `pandas.DataFrame`.
+- Строит сводку и таблицу пропусков так же, как CLI‑утилита из HW03.
+- Вычисляет полный набор эвристик качества через `compute_quality_flags` и оставляет лишь логические признаки (например, `too_few_rows`, `too_many_missing`, `has_constant_columns`, `has_suspicious_id_duplicates` и т.п.).
+- Гарантирует наличие ключевых флагов (`too_few_rows`, `too_many_missing`, `has_constant_columns`, `has_suspicious_id_duplicates`), даже если эвристика не сработала (возвращает `false`).
+
+**Формат запроса:**
+
+```
+
+POST /quality-flags-from-csv
+Content-Type: multipart/form-data
+file: <CSV-файл>
+
+```
+
+**Пример ответа (200 OK):**
+
+```
+
+{
+"flags": {
+"too_few_rows": false,
+"too_many_missing": false,
+"has_constant_columns": true,
+"has_suspicious_id_duplicates": false,
+"...": "..."
+}
+}
+
+```
+
+Эндпоинт удобен для быстрой интеграции с другими сервисами: можно получить только бинарные индикаторы проблем с датасетом и принять решение, можно ли использовать данные в ML‑модели, не разбираясь в деталях сводки качества.
+
+---
+
 ## Структура проекта (упрощённо)
 
 ```text
