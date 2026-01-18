@@ -1,0 +1,26 @@
+{
+    "S07-hw-dataset-01.csv": {
+        "silhouette": 0.5216395622404242,
+        "davies_bouldin": 0.6853295219054459,
+        "calinski_harabasz": 11786.95462267153,
+        "noise_fraction": 0.0
+    },
+    "S07-hw-dataset-02.csv": {
+        "silhouette": 0.3488325191616975,
+        "davies_bouldin": 0.8199994994593429,
+        "calinski_harabasz": 133.19554590550894,
+        "noise_fraction": 0.0505
+    },
+    "S07-hw-dataset-03.csv": {
+        "silhouette": 0.31553248183109267,
+        "davies_bouldin": 1.1577832240211114,
+        "calinski_harabasz": 6957.158106946778,
+        "noise_fraction": 0.0
+    },
+    "S07-hw-dataset-04.csv": {
+        "silhouette": 0.507439052565806,
+        "davies_bouldin": 0.8240137635962008,
+        "calinski_harabasz": 3916.495107696841,
+        "noise_fraction": 0.4885
+    }
+}

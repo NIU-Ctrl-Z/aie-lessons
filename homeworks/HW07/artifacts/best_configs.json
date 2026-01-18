@@ -1,0 +1,36 @@
+{
+    "S07-hw-dataset-01.csv": {
+        "algorithm": "kmeans",
+        "parameters": {
+            "k": 2
+        },
+        "selection_criterion": "max silhouette_score",
+        "output_file": "labels_hw07_ds01.csv"
+    },
+    "S07-hw-dataset-02.csv": {
+        "algorithm": "dbscan",
+        "parameters": {
+            "eps": 0.7,
+            "min_samples": 15
+        },
+        "selection_criterion": "max silhouette_score",
+        "output_file": "labels_hw07_ds02.csv"
+    },
+    "S07-hw-dataset-03.csv": {
+        "algorithm": "kmeans",
+        "parameters": {
+            "k": 3
+        },
+        "selection_criterion": "max silhouette_score",
+        "output_file": "labels_hw07_ds03.csv"
+    },
+    "S07-hw-dataset-04.csv": {
+        "algorithm": "dbscan",
+        "parameters": {
+            "eps": 2.0,
+            "min_samples": 10
+        },
+        "selection_criterion": "max silhouette_score",
+        "output_file": "labels_hw07_ds04.csv"
+    }
+}
