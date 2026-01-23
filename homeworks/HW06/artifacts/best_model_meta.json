@@ -1,5 +1,5 @@
 {
-  "best_model_label": "RandomForest",
+  "best_model": "RandomForest",
   "test_metrics": {
     "model": "RandomForest",
     "accuracy": 0.92875,
